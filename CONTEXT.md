@@ -1876,7 +1876,7 @@ def sample_silver_events(sample_bronze_events) -> pl.DataFrame:
 
 | Phase | Status | Date Started | Date Completed | Notes |
 |-------|--------|-------------|----------------|-------|
-| Phase 0: Setup | **COMPLETE** | 2026-03-31 | 2026-03-31 | All scaffolding done; 47/47 unit tests pass |
+| Phase 0: Setup | **COMPLETE** | 2026-03-31 | 2026-03-31 | 47/47 unit tests pass; ruff clean; git init + first commit |
 | Phase 1: Ingestion | NOT STARTED | — | — | — |
 | Phase 2: Silver | NOT STARTED | — | — | — |
 | Phase 3: Process Mining | NOT STARTED | — | — | — |
@@ -1893,14 +1893,18 @@ src/{config.py, ingestion/, transformation/, analytics/, gold/, quality/, pipeli
 tests/{conftest.py, test_ingestion.py, test_silver.py, test_gold.py, test_analytics.py, test_quality.py}
 docs/{architecture.md, decision_log.md}
 scripts/{run_pipeline.py, profile_data.py, export_for_frontend.py}
-frontend/{package.json, tsconfig.json, vite.config.ts, tailwind.config.ts, index.html}
+frontend/{package.json, tsconfig.json, vite.config.ts, tailwind.config.ts, postcss.config.cjs, index.html}
 .github/workflows/ci.yml
-pyproject.toml, README.md, .gitignore
+pyproject.toml, README.md, .gitignore, .gitattributes
 ```
 
 **Python env:** Installed with `pip install -e ".[dev]"` using Python 3.12.3. All core deps (polars, duckdb, pm4py, pandera, scikit-learn, lightgbm) listed in pyproject.toml.
 
 **Test results:** 47 unit tests pass, 7 integration tests deselected by default (`-m 'not integration'`). Integration tests require bronze/silver/gold parquet files created in later phases.
+
+**Lint:** `ruff check src/ tests/ scripts/` → all checks passed.
+
+**Git:** Initialized, first commit `add70a3` — all 49 project files committed.
 
 **Key source files created:**
 - [src/config.py](src/config.py) — all path constants, quality gate thresholds, scoring weights
