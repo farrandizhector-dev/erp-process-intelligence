@@ -1,4 +1,11 @@
-"""Classify ERP resources as human, batch, or unknown."""
+"""Classify ERP resources as human, batch, or unknown.
+
+Resource naming patterns confirmed from XES inspection (Phase 1, 2026-03-31):
+  - Batch users:   batch_00, batch_01, ..., batch_13   (prefix "batch_", lowercase)
+  - Human users:   user_000, user_001, ..., user_XXX   (prefix "user_")
+  - Unknown:       "NONE" string — used when the action is vendor-initiated
+                   (e.g. "Vendor creates invoice", "Vendor creates debit memo")
+"""
 
 from __future__ import annotations
 
@@ -7,8 +14,6 @@ import logging
 import polars as pl
 
 logger = logging.getLogger(__name__)
-
-# TODO: implement in Phase 2 after inspecting actual resource names in XES
 
 
 def classify_resource(resource: str | None) -> str:
@@ -20,12 +25,17 @@ def classify_resource(resource: str | None) -> str:
     Returns:
         One of "human", "batch", or "unknown".
     """
-    if resource is None or resource == "" or resource.upper() in ("NONE", "NULL"):
+    if resource is None or resource == "" or resource == "NONE":
         return "unknown"
-    # Batch users have names starting with "BATCH" — confirmed after Phase 1 inspection
-    if resource.upper().startswith("BATCH"):
+    # Confirmed from XES: batch users use lowercase "batch_" prefix
+    if resource.lower().startswith("batch_"):
         return "batch"
-    return "human"
+    # Human users use "user_" prefix
+    if resource.lower().startswith("user_"):
+        return "human"
+    # Fallback for any unexpected patterns
+    logger.debug("Unexpected resource pattern, classifying as unknown: %s", resource)
+    return "unknown"
 
 
 def classify_resources_column(events: pl.DataFrame) -> pl.DataFrame:

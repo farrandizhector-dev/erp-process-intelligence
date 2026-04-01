@@ -19,14 +19,20 @@ def test_silver_events_resource_type_values(sample_silver_events: pl.DataFrame) 
 
 
 def test_silver_events_batch_classification(sample_silver_events: pl.DataFrame) -> None:
-    """Resources starting with 'BATCH' should be classified as 'batch'."""
-    batch_rows = sample_silver_events.filter(pl.col("resource").str.starts_with("BATCH"))
+    """Resources starting with 'batch_' (lowercase) should be classified as 'batch'.
+
+    Confirmed from Phase 1 XES inspection: batch resources are batch_00, batch_01, etc.
+    """
+    batch_rows = sample_silver_events.filter(pl.col("resource").str.starts_with("batch_"))
     assert (batch_rows["resource_type"] == "batch").all()
 
 
 def test_silver_events_human_classification(sample_silver_events: pl.DataFrame) -> None:
-    """Resources not starting with 'BATCH' should be classified as 'human'."""
-    human_rows = sample_silver_events.filter(~pl.col("resource").str.starts_with("BATCH"))
+    """Resources starting with 'user_' should be classified as 'human'.
+
+    Confirmed from Phase 1 XES inspection: human resources are user_000, user_001, etc.
+    """
+    human_rows = sample_silver_events.filter(pl.col("resource").str.starts_with("user_"))
     assert (human_rows["resource_type"] == "human").all()
 
 

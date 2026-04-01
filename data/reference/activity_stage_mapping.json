@@ -1,0 +1,70 @@
+{
+  "_meta": {
+    "source": "BPI Challenge 2019 XES — actual activity names confirmed from Phase 1 inspection",
+    "created": "2026-04-01",
+    "stage_definitions": {
+      "S1": "Requisition & Creation — Purchase order/requisition creation and SRM initiation",
+      "S2": "Approval & Release — Authorization and release workflow",
+      "S3": "Vendor Interaction — PO sent to vendor, confirmations, vendor-initiated invoice/debit",
+      "S4": "Goods & Services Receipt — Physical receipt of goods or service entry",
+      "S5": "Invoice Processing — Invoice receipt, entry, subsequent invoices",
+      "S6": "Payment Block Management — Set/remove payment blocks",
+      "S7": "Payment & Clearing — Financial settlement and clearing",
+      "S8": "Exception & Rework — Changes, cancellations, corrections",
+      "S9": "Closure — Administrative closure and completion"
+    },
+    "note": "Stage assignments validated against activity frequency patterns and BPI 2019 challenge documentation. Activities with ambiguous assignments are noted inline."
+  },
+  "mapping": {
+    "Create Purchase Order Item":              "S1",
+    "Create Purchase Requisition Item":         "S1",
+    "SRM: In Transfer to Execution Syst.":      "S1",
+    "SRM: Complete":                            "S1",
+    "SRM: Ordered":                             "S1",
+    "SRM: Document Completed":                  "S1",
+    "SRM: Created":                             "S1",
+    "SRM: Change was Transmitted":              "S1",
+    "SRM: Transfer Failed (E.Sys.)":            "S1",
+    "SRM: Incomplete":                          "S1",
+    "SRM: Held":                                "S1",
+
+    "Change Approval for Purchase Order":       "S2",
+    "Release Purchase Order":                   "S2",
+    "SRM: Awaiting Approval":                   "S2",
+    "Release Purchase Requisition":             "S2",
+
+    "Vendor creates invoice":                   "S3",
+    "Vendor creates debit memo":                "S3",
+    "Receive Order Confirmation":               "S3",
+    "Update Order Confirmation":                "S3",
+
+    "Record Goods Receipt":                     "S4",
+    "Record Service Entry Sheet":               "S4",
+
+    "Record Invoice Receipt":                   "S5",
+    "Record Subsequent Invoice":                "S5",
+
+    "Remove Payment Block":                     "S6",
+    "Set Payment Block":                        "S6",
+
+    "Clear Invoice":                            "S7",
+
+    "Change Quantity":                          "S8",
+    "Change Price":                             "S8",
+    "Delete Purchase Order Item":               "S8",
+    "Cancel Invoice Receipt":                   "S8",
+    "Change Delivery Indicator":                "S8",
+    "Cancel Goods Receipt":                     "S8",
+    "Reactivate Purchase Order Item":           "S8",
+    "Block Purchase Order Item":                "S8",
+    "Cancel Subsequent Invoice":                "S8",
+    "Change Storage Location":                  "S8",
+    "SRM: Deleted":                             "S8",
+    "Change Currency":                          "S8",
+    "Change Final Invoice Indicator":           "S8",
+    "Change payment term":                      "S8",
+    "Change Rejection Indicator":               "S8",
+
+    "SRM: Transaction Completed":               "S9"
+  }
+}

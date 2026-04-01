@@ -109,7 +109,8 @@ BUSINESS_HOURS_START = 8   # 08:00 local time
 BUSINESS_HOURS_END = 18    # 18:00 local time
 
 # Resource classification: names matching this prefix are batch users
-BATCH_RESOURCE_PREFIX = "BATCH"  # Updated after Phase 1 XES inspection
+# Confirmed from Phase 1 XES inspection: lowercase "batch_" (batch_00, batch_01, ...)
+BATCH_RESOURCE_PREFIX = "batch_"
 
 # ---------------------------------------------------------------------------
 # Compliance rules

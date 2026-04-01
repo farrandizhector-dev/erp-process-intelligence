@@ -2,6 +2,13 @@
 
 All fixtures use synthetic data — no dependency on the 728 MB XES file.
 Tests can run in CI without the raw dataset present.
+
+Resource naming patterns confirmed from Phase 1 XES inspection:
+  - Batch: batch_00, batch_01, ..., batch_13  (lowercase "batch_" prefix)
+  - Human: user_000, user_001, ...            (lowercase "user_" prefix)
+  - Unknown: "NONE"                           (vendor-initiated events)
+
+Activity names are actual names from BPI Challenge 2019 XES (Phase 1 confirmed).
 """
 
 from __future__ import annotations
@@ -16,6 +23,8 @@ import pytest
 def sample_bronze_events() -> pl.DataFrame:
     """Minimal bronze events for unit testing. 3 cases, 15 events.
 
+    Uses actual activity names and resource patterns from BPI 2019 XES.
+
     Cases:
     - DOC1_ITEM1: happy path 3-way match after GR (5 events)
     - DOC1_ITEM2: 2-way match (4 events)
@@ -28,17 +37,17 @@ def sample_bronze_events() -> pl.DataFrame:
                 ["DOC1_ITEM1"] * 5 + ["DOC1_ITEM2"] * 4 + ["DOC2_ITEM1"] * 6
             ),
             "activity": [
-                # Case 1: happy path 3-way after GR
+                # Case 1: happy path 3-way after GR (5 distinct activities)
                 "Create Purchase Order Item",
                 "Record Goods Receipt",
+                "Vendor creates invoice",
                 "Record Invoice Receipt",
                 "Clear Invoice",
-                "Close Purchase Order",
-                # Case 2: 2-way match
+                # Case 2: 2-way match (4 distinct activities)
                 "Create Purchase Order Item",
+                "Vendor creates invoice",
                 "Record Invoice Receipt",
                 "Clear Invoice",
-                "Close Purchase Order",
                 # Case 3: rework — invoice cancelled then re-entered
                 "Create Purchase Order Item",
                 "Record Goods Receipt",
@@ -53,38 +62,22 @@ def sample_bronze_events() -> pl.DataFrame:
                 + [base_time + timedelta(hours=i * 24) for i in range(6)]
             ),
             "resource": [
-                "user_001",
-                "BATCH_001",
-                "user_002",
-                "BATCH_002",
-                "BATCH_003",
-                "user_001",
-                "user_002",
-                "BATCH_002",
-                "BATCH_003",
-                "user_001",
-                "BATCH_001",
-                "user_003",
-                "user_003",
-                "user_003",
-                "BATCH_002",
+                # Case 1 — mix of user_, batch_, and NONE (vendor)
+                "user_001", "batch_06", "NONE", "user_002", "batch_00",
+                # Case 2
+                "user_001", "NONE", "user_002", "batch_00",
+                # Case 3 — rework by human, cleared by batch
+                "user_001", "batch_06", "user_003", "user_003", "user_003", "batch_00",
+            ],
+            "user": [
+                "user_001", "batch_06", "NONE", "user_002", "batch_00",
+                "user_001", "NONE", "user_002", "batch_00",
+                "user_001", "batch_06", "user_003", "user_003", "user_003", "batch_00",
             ],
             "event_value": [
-                1000.0,
-                1000.0,
-                1000.0,
-                1000.0,
-                0.0,
-                500.0,
-                500.0,
-                500.0,
-                0.0,
-                2000.0,
-                2000.0,
-                1800.0,
-                -1800.0,
-                2000.0,
-                2000.0,
+                1000.0, 1000.0, 1000.0, 1000.0, 0.0,
+                500.0, 500.0, 500.0, 0.0,
+                2000.0, 2000.0, 1800.0, -1800.0, 2000.0, 2000.0,
             ],
         }
     )
@@ -97,19 +90,19 @@ def sample_bronze_cases() -> pl.DataFrame:
         {
             "case_id": ["DOC1_ITEM1", "DOC1_ITEM2", "DOC2_ITEM1"],
             "purchasing_document": ["DOC1", "DOC1", "DOC2"],
-            "item": ["ITEM1", "ITEM2", "ITEM1"],
+            "item": ["00001", "00002", "00001"],
             "item_type": ["Standard", "Standard", "Standard"],
             "gr_based_iv": [True, False, True],
             "goods_receipt": [True, False, True],
-            "source_system": ["SAP", "SAP", "SAP"],
-            "doc_category_name": ["Standard PO", "Standard PO", "Standard PO"],
-            "company": ["Company_A", "Company_A", "Company_B"],
-            "spend_classification": ["Direct", "Direct", "Indirect"],
+            "source_system": ["sourceSystemID_0000", "sourceSystemID_0000", "sourceSystemID_0001"],
+            "doc_category_name": ["Purchase order", "Purchase order", "Purchase order"],
+            "company": ["companyID_0000", "companyID_0000", "companyID_0001"],
+            "spend_classification": ["NPR", "NPR", "PR"],
             "spend_area": ["Raw Materials", "Raw Materials", "Services"],
             "sub_spend_area": ["Chemicals", "Chemicals", "Logistics"],
-            "vendor": ["Vendor_X", "Vendor_Y", "Vendor_X"],
-            "vendor_name": ["Vendor X BV", "Vendor Y GmbH", "Vendor X BV"],
-            "document_type": ["NB", "NB", "FO"],
+            "vendor": ["vendorID_0000", "vendorID_0001", "vendorID_0000"],
+            "vendor_name": ["vendor_0000", "vendor_0001", "vendor_0000"],
+            "document_type": ["EC Purchase order", "EC Purchase order", "EC Purchase order"],
             "item_category": [
                 "3-way match, invoice after GR",
                 "2-way match",
@@ -121,12 +114,19 @@ def sample_bronze_cases() -> pl.DataFrame:
 
 @pytest.fixture
 def sample_silver_events(sample_bronze_events: pl.DataFrame) -> pl.DataFrame:
-    """Silver events with enrichment columns for testing analytics."""
+    """Silver events with enrichment columns for testing analytics.
+
+    resource_type uses real patterns:  batch_ → "batch",  user_ → "human",  NONE → "unknown"
+    """
     return sample_bronze_events.with_columns(
         [
             pl.col("resource")
             .map_elements(
-                lambda r: "batch" if r.startswith("BATCH") else "human",
+                lambda r: (
+                    "batch" if str(r).lower().startswith("batch_")
+                    else "human" if str(r).lower().startswith("user_")
+                    else "unknown"
+                ),
                 return_dtype=pl.Utf8,
             )
             .alias("resource_type"),
